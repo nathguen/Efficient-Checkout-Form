@@ -1,0 +1,32 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<dom-module id="credit-card-type">
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+  <template>
+    <paper-input list="credit-card-type" value="{{cardType::input}}" label="Credit Card Type"></paper-input>
+    <datalist id="credit-card-type">
+      <option value="Visa">Visa</option>
+      <option value="American Express">American Express</option>
+      <option value="Mastercard">Mastercard</option>
+      <option value="Discover">Discover</option>
+    </datalist>
+  </template>
+  <script>
+  Polymer({
+    is: "credit-card-type",
+    properties: {
+      cardType: {
+        type: String,
+        value: '',
+        observer: 'sendCardType'
+      }
+    },
+    sendCardType: function(cardType){
+      this.fire('sendCardType', {cardType: cardType});
+    }
+  });
+  </script>
+</dom-module>

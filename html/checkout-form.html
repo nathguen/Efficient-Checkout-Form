@@ -1,0 +1,389 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/gold-email-input/gold-email-input.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/gold-cc-input/gold-cc-input.html">
+<link rel="import" href="../bower_components/gold-cc-cvc-input/gold-cc-cvc-input.html">
+<link rel="import" href="../bower_components/gold-cc-expiration-input/gold-cc-expiration-input.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="credit-card-type.html">
+
+<dom-module id="checkout-form">
+  <style>
+    :host {
+      display: block;
+      margin-top: 30px;
+    }
+    .left-column {
+      width: 80%;
+      max-width: 900px;
+      margin-left: 30px;
+    }
+    .right-column {
+      position: fixed;
+      left: 960px;
+      right: 30px;
+      top: 57px;
+    }
+
+    .form-section {
+      background: white;
+      padding: 5px 15px 20px 15px;
+      margin-bottom: 20px;
+    }
+
+    .flex-section {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .flex-section gold-email-input,
+    .flex-section paper-input {
+      flex-grow: 5;
+    }
+
+    .flex-section paper-button {
+      background: rgb(212, 212, 212);
+      border: 1px solid rgb(205,205,205);
+    }
+    .credit-card-details {
+      display: flex;
+      justify-content: space-between;
+      /*width: 50%;*/
+      /*max-width: 300px;*/
+    }
+    .credit-card-details gold-cc-cvc-input,
+    .credit-card-details cred-card-type {
+      margin-right: 10px;
+    }
+    .credit-card-start gold-cc-input {
+      flex-grow: 8;
+      margin-right: 10px;
+    }
+    .credit-card-start cred-card-type {
+      flex-grow: 2;
+    }
+    #submit {
+      background: rgb(200,200,200);
+      color: white;
+    }
+    #submit.submit-valid {
+      background: #21a521;
+    }
+  </style>
+  <template>
+    <div class="flex-columns">
+      <div class="left-column">
+        <form is="iron-form" id="form" method="post" action="/form/handler">
+          <paper-material class="form-section" elevation="1">
+            <h3>Personal Information</h3>
+            <paper-input id="personName" value="{{person.name::input}}" on-keypress="checkIfPersonalInfoComplete" autofocus label="Full Name" for="name" autocomplete="name"></paper-input>
+            <div class="flex-section email-section">
+              <gold-email-input id="personEmail" value="{{person.email::input}}" on-keypress="checkIfPersonalInfoComplete" label="Email" for="email" auto-validate></gold-email-input>
+              <paper-checkbox>Subscribe to the mailing list</paper-checkbox>
+            </div>
+          </paper-material>
+          <paper-material class="form-section" elevation="1">
+            <h3>Your Shipping Address</h3>
+            <div class="address-section">
+              <div class="flex-section">
+                <paper-input on-input="checkIfShippingInfoComplete" label="Address" id="shippingStreetAddress" for="address" autocomplete="address"></paper-input>
+                <paper-button on-tap="addAdditionalShippingAddress" raised>
+                  <iron-icon icon="add"></iron-icon>
+                  Address
+                </paper-button>
+              </div>
+              <template is="dom-repeat" items="{{additionalShippingAddresses}}" index-as="index">
+                <paper-input label="{{item.label}}" value="{{item.value}}"></paper-input>
+              </template>
+            </div>
+            <div class="geo-info">
+              <paper-input on-input="checkIfShippingInfoComplete" id="shippingCity" label="City"></paper-input>
+              <paper-input on-input="checkIfShippingInfoComplete" id="shippingState" label="State/Province"></paper-input>
+              <paper-input on-input="checkIfShippingInfoComplete" id="shippingZip" label="Zip / Postal Code"></paper-input>
+              <!-- <paper-input id="shippingCountry" label="Country"></paper-input> -->
+            </div>
+          </paper-material>
+
+          <paper-material class="form-section" elevation="1">
+            <h3>Your Billing Address</h3>
+            <paper-checkbox checked="{{billingAddressSame}}">Billing information is the same as the shipping address.</paper-checkbox>
+            <template is="dom-if" if="{{!billingAddressSame}}" restamp="true">
+              <div class="address-section">
+                <div class="flex-section">
+                  <paper-input label="Address" for="address" autocomplete="address"></paper-input>
+                  <paper-button on-tap="addAdditionalBillingAddress" raised>
+                    <iron-icon icon="add"></iron-icon>
+                    Address
+                  </paper-button>
+                </div>
+                <template is="dom-repeat" items="{{additionalBillingAddresses}}" index-as="index">
+                  <paper-input label="{{item.label}}" value="{{item.value}}"></paper-input>
+                </template>
+              </div>
+              <div class="geo-info">
+                <paper-input label="City"></paper-input>
+                <paper-input label="State/Province"></paper-input>
+                <paper-input label="Zip / Postal Code"></paper-input>
+                <paper-input label="Country"></paper-input>
+              </div>
+            </template>
+          </paper-material>
+
+          <paper-material class="form-section" elevation="1">
+            <h3>Your Credit Card Information</h3>
+            <div class="cc-warning"><em>Note: don't enter any actual credit card info!</em></div>
+            <gold-cc-input id="creditCardNumber" on-input="checkIfCreditCardInfoComplete" card-type="{{cardType}}"></gold-cc-input>
+            <div class="credit-card-details">
+              <credit-card-type id="creditCardType" card-type$="{{cardType}}"></credit-card-type>
+              <gold-cc-cvc-input id="creditCardCVC" on-input="checkIfCreditCardInfoComplete" card-type="[[cardType]]"></gold-cc-cvc-input>
+              <gold-cc-expiration-input id="creditCardExpiration" on-input="checkIfCreditCardInfoComplete"></gold-cc-expiration-input>
+            </div>
+          </paper-material>
+        </form>
+      </div>
+
+
+      <div class="right-column">
+        <paper-card heading="Check Out">
+          <div class="card-content">
+            <h4>Check List</h4>
+            <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.person)}}"></iron-icon>Personal Information</h5>
+            <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.shipping)}}"></iron-icon>Shipping Address</h5>
+            <h5><iron-icon icon$="{{setBillingCheckListIcon(checkListBooleans.shipping, billingAddressSame, checkListBooleans.billing)}}"></iron-icon>Billing Address</h5>
+            <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.credit)}}"></iron-icon>Credit Card</h5>
+
+            <table class="your-order">
+              <tr class="headings">
+                <td>Product</td>
+                <td>Quantity</td>
+                <td>Price</td>
+                <td>Total</td>
+              </tr>
+              <tr>
+                <td>Game Console 2015</td>
+                <td>1</td>
+                <td>$500.00</td>
+                <td>$500.00</td>
+              </tr>
+              <tr>
+                <td>Platformer Bros 3D</td>
+                <td>1</td>
+                <td>$50.00</td>
+                <td>$50.00</td>
+              </tr>
+              <tr class="total">
+                <td>Total</td>
+                <td>$550.00</td>
+              </tr>
+            </table>
+          </div>
+          <div class="card-actions">
+            <paper-button class$="{{setSubmitButtonClass(formIsValid)}}" disabled$="{{!validateSubmitButton(checkListBooleans.person, checkListBooleans.shipping, checkListBooleans.billing, checkListBooleans.credit)}}" raised id="submit" type="submit">Submit</paper-button>
+          </div>
+        </paper-card>
+      </div>
+    </div>
+
+  </template>
+  <script>
+  Polymer({
+    is: "checkout-form",
+    properties: {
+      additionalShippingAddresses: {
+        type: Array,
+        value: []
+      },
+      additionalBillingAddresses: {
+        type: Array,
+        value: []
+      },
+      billingAddressSame: {
+        type: Boolean,
+        value: true
+      },
+      cardType: {
+        type: String,
+        value: ''
+      },
+      person: {
+        type: Object,
+        value: {
+          name: '',
+          email: ''
+        }
+      },
+      checkListBooleans: {
+        type: Object,
+        value: {
+          person: false,
+          shipping: false,
+          billing: false,
+          credit: false
+        }
+      },
+      formIsValid: {
+        type: Boolean,
+        value: false
+      }
+    },
+    listeners: {
+      'sendCardType': 'checkIfCreditCardInfoComplete',
+      'sendCardType': 'updateCardType'
+    },
+    ready: function() {
+      var script = document.createElement('script');
+      script.setAttribute('src', 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDBdsoKK0wPlfMXjhNEv9y6juA_T2Er0Ek&signed_in=true&libraries=places&callback=initAutocomplete');
+      this.appendChild(script);
+    },
+    setSubmitButtonClass: function(boolean){
+      if(boolean)   return 'submit-valid';
+      else          return '';
+    },
+    validateSubmitButton: function(personBoolean, shippingBoolean, billingBoolean, creditBoolean){
+      if((personBoolean && creditBoolean) && ((billingBoolean && shippingBoolean) || (shippingBoolean && this.billingAddressSame))){
+        this.set('formIsValid', true);
+        return true;
+      } else {
+        this.set('formIsValid', false);
+        return false;
+      }
+    },
+    updateCardType: function(e){
+      this.set('cardType', e.detail.cardType);
+    },
+    setBillingCheckListIcon: function(shippingBoolean, billingAddressSame, billingBoolean){
+      // completed if the shipping info is completed, and the billing address is the same as shipping
+      // completed if the billing info is completed
+      if((shippingBoolean && billingAddressSame) || billingBoolean) {
+        return 'check-box';
+      } else {
+        return 'check-box-outline-blank';
+      }
+    },
+    setCheckListIcon: function(bool){
+      if(bool)    return 'check-box';
+      else        return 'check-box-outline-blank';
+    },
+    checkIfShippingInfoComplete: function(e){
+      if(this.$.shippingStreetAddress.value.length && this.$.shippingCity.value.length && this.$.shippingState.value.length && this.$.shippingZip.value.length) {
+        this.set(['checkListBooleans', 'shipping'], true);
+      } else {
+        this.set(['checkListBooleans', 'shipping'], false);
+      }
+    },
+    checkIfPersonalInfoComplete: function(e){
+      if(this.person.name.length && this.person.email.length > 0 && this.$.personEmail.validate()) {
+        this.set(['checkListBooleans', 'person'], true);
+      } else {
+        this.set(['checkListBooleans', 'person'], false);
+      }
+    },
+    checkIfCreditCardInfoComplete: function(e){
+      if(this.$.creditCardType.cardType.length){                                                            // credit card type valid
+        if(this.$.creditCardCVC.value.length >= 3 && this.$.creditCardCVC.validate()){                      // credit card cvc valid
+          if(this.$.creditCardNumber.value.length >= 16){                                                   // credit card number valid
+            if(this.$.creditCardExpiration.validate() && this.$.creditCardExpiration.value.length == 5) {   // credit card expiration valid
+              this.set(['checkListBooleans', 'credit'], true);
+              return;
+            }
+          }
+        }
+      }
+
+      // credit card info not valid
+      this.set(['checkListBooleans', 'credit'], false);
+    },
+    addAdditionalShippingAddress: function(e){
+      var addressObject = {
+        label: 'Address ' + (this.additionalShippingAddresses.length + 2),
+        value: ''
+      };
+      this.push('additionalShippingAddresses', addressObject);
+    },
+    addAdditionalBillingAddress: function(e){
+      var addressObject = {
+        label: 'Address ' + (this.additionalBillingAddresses.length + 2),
+        value: ''
+      };
+      this.push('additionalBillingAddresses', addressObject);
+    }
+  });
+
+
+
+  var initAutocomplete = function(){
+    // Create the autocomplete object, restricting the search to geographical
+    // location types.
+    _this = document.querySelector('checkout-form');
+
+    _this.autocomplete = new google.maps.places.Autocomplete(
+      (_this.querySelector('#shippingStreetAddress').$.input),
+      {types: ['geocode']});
+
+      _this.googleLocationComponents = {
+        address: {
+          street_number: "long_name",
+          route: "short_name"
+        },
+        city: {
+          locality: "long_name"
+        },
+        state: {
+          administrative_area_level_1: "short_name"
+        },
+        country: {
+          country: "long_name"
+        },
+        postal: {
+          postal_code: "long_name"
+        }
+      };
+
+      // When the user selects an address from the dropdown, populate the address
+      // fields in the form.
+      _this.autocomplete.addListener('place_changed', function(){
+        place = _this.autocomplete.getPlace();
+
+        // get the location info
+        var streetAddress = '',
+        city = '',
+        state = '',
+        zip = '';
+
+        for(var i = 0; i < place.address_components.length; i++){
+          // street
+          if(_this.googleLocationComponents.address[place.address_components[i].types[0]] != null && _this.googleLocationComponents.address[place.address_components[i].types[0]].length) {
+            streetAddress += place.address_components[i][_this.googleLocationComponents.address[place.address_components[i].types[0]]];
+          }
+
+          // city
+          if(_this.googleLocationComponents.city[place.address_components[i].types[0]] != null && _this.googleLocationComponents.city[place.address_components[i].types[0]].length) {
+            city += place.address_components[i][_this.googleLocationComponents.city[place.address_components[i].types[0]]];
+          }
+
+          // state
+          if(_this.googleLocationComponents.state[place.address_components[i].types[0]] != null && _this.googleLocationComponents.state[place.address_components[i].types[0]].length) {
+            state += place.address_components[i][_this.googleLocationComponents.state[place.address_components[i].types[0]]];
+          }
+
+          // zip
+          if(_this.googleLocationComponents.postal[place.address_components[i].types[0]] != null && _this.googleLocationComponents.postal[place.address_components[i].types[0]].length) {
+            zip += place.address_components[i][_this.googleLocationComponents.postal[place.address_components[i].types[0]]];
+          }
+        }
+
+        // add the data to the UI
+        _this.$.shippingStreetAddress.value = streetAddress;
+        _this.$.shippingCity.value = city;
+        _this.$.shippingState.value = state;
+        _this.$.shippingZip.value = zip;
+        _this.checkIfShippingInfoComplete();
+      });
+    }
+    </script>
+  </dom-module>
