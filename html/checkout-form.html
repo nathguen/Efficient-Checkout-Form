@@ -5,6 +5,8 @@
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="../bower_components/iron-icons/social-icons.html">
 <link rel="import" href="../bower_components/gold-cc-input/gold-cc-input.html">
 <link rel="import" href="../bower_components/gold-cc-cvc-input/gold-cc-cvc-input.html">
 <link rel="import" href="../bower_components/gold-cc-expiration-input/gold-cc-expiration-input.html">
@@ -15,18 +17,27 @@
   <style>
     :host {
       display: block;
+      max-width: 1100px;
+      margin: auto;
       margin-top: 30px;
     }
+    .flex-columns {
+      display: flex;
+      flex-direction: row;
+    }
     .left-column {
-      width: 80%;
+      width: 50%;
       max-width: 900px;
       margin-left: 30px;
     }
     .right-column {
+      position: relative;
+      margin-left: 10px;
+    }
+
+    .right-column.past-header {
       position: fixed;
-      left: 960px;
-      right: 30px;
-      top: 57px;
+      top: 30px;
     }
 
     .form-section {
@@ -60,12 +71,14 @@
     .credit-card-details cred-card-type {
       margin-right: 10px;
     }
-    .credit-card-start gold-cc-input {
-      flex-grow: 8;
-      margin-right: 10px;
+    credit-card-type {
+      flex-grow: 4;
     }
-    .credit-card-start cred-card-type {
-      flex-grow: 2;
+    gold-cc-cvc-input, gold-cc-expiration-input {
+      flex-grow: 3;
+    }
+    .card-content .check-list * {
+      color: rgb(180,180,180);
     }
     #submit {
       background: rgb(200,200,200);
@@ -73,6 +86,103 @@
     }
     #submit.submit-valid {
       background: #21a521;
+    }
+
+    @media screen and (min-width:768px) {
+      .mobile-only {
+        display: none;
+      }
+    }
+
+    @media screen and (max-width:767px) {
+      :host {
+        margin-top: 0;
+      }
+      .desktop-only {
+        display: none;
+      }
+      .flex-columns {
+        display: flex;
+        flex-direction: column-reverse;
+      }
+      .left-column {
+        width: 100%;
+        padding: 10px 15px;
+        margin: 0;
+        position: relative;
+        box-sizing: border-box;
+      }
+      .right-column {
+        width: 100%;
+        position: relative;
+        top: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+      }
+
+      .right-column.mobile-past-header {
+        position: fixed;
+        top: 0;
+      }
+      .right-column.mobile-past-header table.your-order {
+        display: none;
+      }
+      .credit-card-details {
+        flex-wrap: wrap;
+      }
+      .right-column paper-card {
+        width: 100%;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .right-column paper-card .check-list h4 {
+        display: none;
+      }
+      .right-column paper-card #submit {
+        position: absolute;
+        right: 5px;
+        top: 10px;
+      }
+      .right-column paper-card .card-content {
+        padding: 0;
+        padding-bottom: 10px;
+      }
+      .right-column paper-card .check-list {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0 5px;
+      }
+      .right-column paper-card .check-list * {
+        color: #9fbbff;
+      }
+      .right-column paper-card .check-list h5 {
+        padding: 0;
+        margin: 0;
+      }
+      .right-column paper-card .card-actions {
+        padding: 0;
+        border: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+      .your-order .col-total, .your-order thead {
+        display: none;
+      }
+      table.your-order {
+        border-top: 1px solid rgb(200,200,200);
+        margin-top: 5px;
+        padding-top: 5px;
+        width: 100%;
+      }
+      .add-additional-address-button {
+        font-size: .85rem;
+        padding: 4px 10px 4px 2px;
+        text-transform: capitalize;
+      }
     }
   </style>
   <template>
@@ -92,7 +202,7 @@
             <div class="address-section">
               <div class="flex-section">
                 <paper-input on-input="checkIfShippingInfoComplete" label="Address" id="shippingStreetAddress" for="address" autocomplete="address"></paper-input>
-                <paper-button on-tap="addAdditionalShippingAddress" raised>
+                <paper-button on-tap="addAdditionalShippingAddress" class="add-additional-address-button" raised>
                   <iron-icon icon="add"></iron-icon>
                   Address
                 </paper-button>
@@ -151,30 +261,35 @@
       <div class="right-column">
         <paper-card heading="Check Out">
           <div class="card-content">
-            <h4>Check List</h4>
-            <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.person)}}"></iron-icon>Personal Information</h5>
-            <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.shipping)}}"></iron-icon>Shipping Address</h5>
-            <h5><iron-icon icon$="{{setBillingCheckListIcon(checkListBooleans.shipping, billingAddressSame, checkListBooleans.billing)}}"></iron-icon>Billing Address</h5>
-            <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.credit)}}"></iron-icon>Credit Card</h5>
+            <div class="check-list">
+              <h4>Check List</h4>
+              <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.person)}}"></iron-icon><iron-icon class="mobile-only" icon="social:person"></iron-icon><span class="desktop-only">Personal Information</span></h5>
+              <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.shipping)}}"></iron-icon><iron-icon class="mobile-only" icon="maps:local-shipping"></iron-icon><span class="desktop-only">Shipping Address</span></h5>
+              <h5><iron-icon icon$="{{setBillingCheckListIcon(checkListBooleans.shipping, billingAddressSame, checkListBooleans.billing)}}"></iron-icon><iron-icon class="mobile-only" icon="icons:mail"></iron-icon><span class="desktop-only">Billing Address</span></h5>
+              <h5><iron-icon icon$="{{setCheckListIcon(checkListBooleans.credit)}}"></iron-icon><iron-icon class="mobile-only" icon="icons:payment"></iron-icon><span class="desktop-only">Credit Card</span></h5>
+            </div>
 
             <table class="your-order">
-              <tr class="headings">
-                <td>Product</td>
-                <td>Quantity</td>
-                <td>Price</td>
-                <td>Total</td>
-              </tr>
+              <thead class="headings">
+                <tr>
+                  <th>Product</td>
+                  <th>Quantity</td>
+                  <th>Price</td>
+                  <th class="col-total">Total</td>
+                </tr>
+              </thead>
+
               <tr>
                 <td>Game Console 2015</td>
                 <td>1</td>
                 <td>$500.00</td>
-                <td>$500.00</td>
+                <td class="col-total">$500.00</td>
               </tr>
               <tr>
                 <td>Platformer Bros 3D</td>
                 <td>1</td>
                 <td>$50.00</td>
-                <td>$50.00</td>
+                <td class="col-total">$50.00</td>
               </tr>
               <tr class="total">
                 <td>Total</td>
@@ -239,6 +354,45 @@
       var script = document.createElement('script');
       script.setAttribute('src', 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDBdsoKK0wPlfMXjhNEv9y6juA_T2Er0Ek&signed_in=true&libraries=places&callback=initAutocomplete');
       this.appendChild(script);
+
+      // set scroll function
+
+      document.addEventListener('scroll', function(e){
+        var leftCol = this.querySelector('.left-column');
+        var rightCol = this.querySelector('.right-column');
+        var header = document.querySelector('header');
+
+        // if not mobile
+        var mobileClass = 'mobile-past-header';
+        var nonMobileClass = 'past-header';
+        if(window.innerWidth >= 768) {
+          if(window.scrollY >= header.offsetHeight) {
+            if(!rightCol.classList.contains(nonMobileClass)) {
+              rightCol.classList.add(nonMobileClass);
+              rightCol.style.left = leftCol.offsetWidth + leftCol.offsetLeft + 'px';
+            }
+          } else {
+            if(rightCol.classList.contains(nonMobileClass)) {
+              rightCol.classList.remove(nonMobileClass);
+              rightCol.style.left = 'inherit';
+            }
+          }
+        } else {
+          // if mobile
+          if(window.scrollY >= header.offsetHeight) {
+            if(!rightCol.classList.contains(mobileClass)) {
+              rightCol.classList.add(mobileClass);
+              leftCol.style.marginTop = rightCol.offsetHeight + 'px';
+            }
+          } else {
+            if(rightCol.classList.contains(mobileClass)) {
+              rightCol.classList.remove(mobileClass);
+              leftCol.style.marginTop = 0;
+            }
+          }
+        }
+
+      });
     },
     setSubmitButtonClass: function(boolean){
       if(boolean)   return 'submit-valid';
