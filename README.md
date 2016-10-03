@@ -1,5 +1,5 @@
 # Efficient-Checkout-Form
-This is a form utilizing Polymer 1.0 and a decent UI. Only works for desktop so far.
+This is a form utilizing Polymer 1.0 and a decent UI. Designed and built to be responsive.
 
 ## Setup Instructions
 
